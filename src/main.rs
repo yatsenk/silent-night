@@ -61,8 +61,18 @@ pub fn setup_player(mut commands: Commands) {
                     color: Color::srgb(0.25, 0.25, 0.25),
                     falloff: FogFalloff::Linear {
                         start: 10.0,
-                        end: 40.0,
+                        end: 30.0,
                     },
+                    ..default()
+                },
+            ));
+
+            b.spawn((
+                Transform::from_xyz(0.0, 0.2, -0.1),
+                PointLight {
+                    intensity: 2_000_000.0,
+                    shadows_enabled: true,
+                    range: 30.0, 
                     ..default()
                 },
             ));
@@ -73,6 +83,7 @@ fn setup_map(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    asset_server: Res<AssetServer>,
 ) {
     // sky
     commands.spawn((
@@ -87,19 +98,38 @@ fn setup_map(
     ));
 
     // light
-    commands.spawn((
-        PointLight {
-            shadows_enabled: true,
-            ..default()
-        },
-        Transform::from_xyz(0.0, 1.0, 0.0),
-    ));
+    let scene_handle = asset_server.load(
+        GltfAssetLabel::Scene(0).from_asset("streetlights/scene.gltf")
+    );
 
-    /*
-     * Ground
-     */ 
+    commands.spawn(Transform::from_xyz(20.0, -1.0, 0.0))
+    .with_children(|parent| {
+        parent.spawn((
+            SceneRoot(scene_handle.clone()),
+            Transform {
+                translation: Vec3::ZERO,
+                rotation: Quat::from_rotation_y(0f32.to_radians()),
+                scale: Vec3::splat(0.03),
+            },
+            PointLight {
+                intensity: 3_000_000.0,
+                shadows_enabled: true,
+                range: 40.0, 
+                ..default()
+            },
+        ));
+    });
+
+
+    // ground
     let ground_size = 100.0;
     let ground_height = 0.1;
+
+    commands.spawn((
+        Mesh3d(meshes.add(Plane3d::default().mesh().size(ground_size, ground_size))),
+        MeshMaterial3d(materials.add(Color::srgb(0.3, 0.5, 0.3))),
+    ));
+
     commands.spawn((
         Transform::from_xyz(0.0, -ground_height, 0.0),
         Collider::cuboid(ground_size, ground_height, ground_size),
