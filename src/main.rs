@@ -12,13 +12,16 @@ const GRAVITY: f32 = -9.81;
 
 fn main() {
     App::new()
-        .insert_resource(AmbientLight::NONE)
+        .insert_resource(AmbientLight {
+            brightness: 20.0,
+            ..default()
+        })
         .init_resource::<MovementInput>()
         .init_resource::<LookInput>()
         .add_plugins((
             DefaultPlugins,
             RapierPhysicsPlugin::<NoUserData>::default(),
-            RapierDebugRenderPlugin::default(),
+            //RapierDebugRenderPlugin::default(),
         ))
         .add_systems(Startup, (setup_player, setup_map))
         .add_systems(PreUpdate, handle_input.after(InputSystem))
@@ -57,6 +60,7 @@ pub fn setup_player(mut commands: Commands) {
             b.spawn((
                 Camera3d::default(), 
                 Transform::from_xyz(0.0, 0.2, -0.1),
+                /* 
                 DistanceFog {
                     color: Color::srgb(0.25, 0.25, 0.25),
                     falloff: FogFalloff::Linear {
@@ -65,12 +69,13 @@ pub fn setup_player(mut commands: Commands) {
                     },
                     ..default()
                 },
+                */
             ));
 
             b.spawn((
                 Transform::from_xyz(0.0, 0.2, -0.1),
                 PointLight {
-                    intensity: 2_000_000.0,
+                    intensity: 4000.0,
                     shadows_enabled: true,
                     range: 30.0, 
                     ..default()
@@ -111,11 +116,15 @@ fn setup_map(
                 rotation: Quat::from_rotation_y(0f32.to_radians()),
                 scale: Vec3::splat(0.03),
             },
-            PointLight {
-                intensity: 3_000_000.0,
+        ));
+        parent.spawn((
+            SpotLight {
+                color: Color::srgb(240.0, 210.0, 2.0),
+                intensity: 5000.0,
                 shadows_enabled: true,
-                range: 40.0, 
-                ..default()
+                range: 35.0, 
+                radius: 0.2,
+                ..default() 
             },
         ));
     });
