@@ -13,7 +13,7 @@ const GRAVITY: f32 = -9.81;
 fn main() {
     App::new()
         .insert_resource(AmbientLight {
-            brightness: 20.0,
+            brightness: 250.0,
             ..default()
         })
         .init_resource::<MovementInput>()
@@ -59,8 +59,7 @@ pub fn setup_player(mut commands: Commands) {
             // FPS Camera
             b.spawn((
                 Camera3d::default(), 
-                Transform::from_xyz(0.0, 0.2, -0.1),
-                /* 
+                Transform::from_xyz(0.0, 3.0, -0.1),
                 DistanceFog {
                     color: Color::srgb(0.25, 0.25, 0.25),
                     falloff: FogFalloff::Linear {
@@ -69,7 +68,6 @@ pub fn setup_player(mut commands: Commands) {
                     },
                     ..default()
                 },
-                */
             ));
 
             b.spawn((
@@ -136,8 +134,13 @@ fn setup_map(
 
     commands.spawn((
         Mesh3d(meshes.add(Plane3d::default().mesh().size(ground_size, ground_size))),
-        MeshMaterial3d(materials.add(Color::srgb(0.3, 0.5, 0.3))),
-    ));
+        MeshMaterial3d(materials.add(StandardMaterial {
+            base_color: Srgba::hex("654321").unwrap().into(),
+            unlit: true,
+            cull_mode: None,
+            ..default()
+        }),
+    )));
 
     commands.spawn((
         Transform::from_xyz(0.0, -ground_height, 0.0),
