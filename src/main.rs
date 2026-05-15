@@ -129,13 +129,15 @@ fn setup_map(
 
 
     // ground
+    let ground_texture: Handle<Image> = asset_server.load("textures/ground/Albedo.png");
+
     let ground_size = 100.0;
     let ground_height = 0.1;
 
     commands.spawn((
         Mesh3d(meshes.add(Plane3d::default().mesh().size(ground_size, ground_size))),
         MeshMaterial3d(materials.add(StandardMaterial {
-            base_color: Srgba::hex("654321").unwrap().into(),
+            base_color_texture: Some(ground_texture.clone()),
             unlit: true,
             cull_mode: None,
             ..default()
