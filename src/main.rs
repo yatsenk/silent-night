@@ -19,7 +19,7 @@ const GRAVITY: f32 = -9.81;
 fn main() {
     App::new()
         .insert_resource(AmbientLight {
-            brightness: 250.0,
+            brightness: 20.0,
             ..default()
         })
         .init_resource::<MovementInput>()
@@ -67,10 +67,10 @@ pub fn setup_player(mut commands: Commands) {
                 Camera3d::default(), 
                 Transform::from_xyz(0.0, 3.0, -0.1),
                 DistanceFog {
-                    color: Color::srgb(0.25, 0.25, 0.25),
+                    color: Color::srgb(0.0, 0.0, 0.0),
                     falloff: FogFalloff::Linear {
-                        start: 70.0,
-                        end: 85.0,
+                        start: 30.0,
+                        end: 50.0,
                     },
                     ..default()
                 },
@@ -79,9 +79,9 @@ pub fn setup_player(mut commands: Commands) {
             b.spawn((
                 Transform::from_xyz(0.0, 0.2, -0.1),
                 PointLight {
-                    intensity: 4000.0,
+                    intensity: 15.0,
                     shadows_enabled: true,
-                    range: 30.0, 
+                    range: 15.0, 
                     ..default()
                 },
             ));
@@ -121,16 +121,18 @@ fn setup_map(
                 scale: Vec3::splat(0.03),
             },
         ));
+        /*
         parent.spawn((
             SpotLight {
                 color: Color::srgb(240.0, 210.0, 2.0),
-                intensity: 3000.0,
+                intensity: 500.0,
                 shadows_enabled: true,
                 range: 35.0, 
                 radius: 0.2,
                 ..default() 
             },
         ));
+         */
     });
 
 
@@ -170,7 +172,7 @@ fn setup_map(
         Mesh3d(meshes.add(mesh)),
         MeshMaterial3d(materials.add(StandardMaterial {
             base_color_texture: Some(ground_texture.clone()),
-            unlit: true,
+            unlit: false,
             cull_mode: None,
             ..default()
         }),
