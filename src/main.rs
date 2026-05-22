@@ -1,6 +1,12 @@
 use bevy::{
-    input::{mouse::MouseMotion, InputSystem},
-    prelude::*,
+    render::mesh::{VertexAttributeValues, PlaneMeshBuilder},
+    image::{
+        ImageLoaderSettings, 
+        ImageSampler, 
+        ImageAddressMode, 
+        ImageSamplerDescriptor
+    }, 
+    input::{InputSystem, mouse::MouseMotion}, prelude::*,
 };
 use bevy_rapier3d::{control::KinematicCharacterController, prelude::*};
 
@@ -63,8 +69,8 @@ pub fn setup_player(mut commands: Commands) {
                 DistanceFog {
                     color: Color::srgb(0.25, 0.25, 0.25),
                     falloff: FogFalloff::Linear {
-                        start: 10.0,
-                        end: 30.0,
+                        start: 70.0,
+                        end: 85.0,
                     },
                     ..default()
                 },
@@ -118,7 +124,7 @@ fn setup_map(
         parent.spawn((
             SpotLight {
                 color: Color::srgb(240.0, 210.0, 2.0),
-                intensity: 5000.0,
+                intensity: 3000.0,
                 shadows_enabled: true,
                 range: 35.0, 
                 radius: 0.2,
@@ -129,13 +135,39 @@ fn setup_map(
 
 
     // ground
-    let ground_texture: Handle<Image> = asset_server.load("textures/ground/Albedo.png");
+    let image_sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
+        address_mode_u: ImageAddressMode::Repeat,
+        address_mode_v: ImageAddressMode::Repeat,
+        address_mode_w: ImageAddressMode::Repeat,
+        ..default()
+    });
 
-    let ground_size = 100.0;
+    let ground_texture: Handle<Image> = asset_server.load_with_settings(
+        "textures/ground/Albedo.png",
+        
+        move |settings: &mut ImageLoaderSettings| {
+            settings.sampler = image_sampler.clone();
+        },
+    );
+
+    let ground_size = 500.0;
     let ground_height = 0.1;
 
+    let mut mesh = PlaneMeshBuilder::from_size(Vec2::new(
+        ground_size, 
+        ground_size,     
+    ))
+    .build();
+
+    if let Some(VertexAttributeValues::Float32x2(uvs)) = mesh.attribute_mut(Mesh::ATTRIBUTE_UV_0) {
+        for uv in uvs {
+            uv[0] *= 10.;
+            uv[1] *= 8.;
+        }
+    };
+
     commands.spawn((
-        Mesh3d(meshes.add(Plane3d::default().mesh().size(ground_size, ground_size))),
+        Mesh3d(meshes.add(mesh)),
         MeshMaterial3d(materials.add(StandardMaterial {
             base_color_texture: Some(ground_texture.clone()),
             unlit: true,
