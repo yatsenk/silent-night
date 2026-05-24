@@ -1,4 +1,6 @@
 use bevy::{
+    dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin},
+    text::FontSmoothing,
     render::mesh::{VertexAttributeValues, PlaneMeshBuilder},
     image::{
         ImageLoaderSettings, 
@@ -7,6 +9,7 @@ use bevy::{
         ImageSamplerDescriptor
     }, 
     input::{InputSystem, mouse::MouseMotion}, prelude::*,
+    window::{CursorGrabMode, WindowPlugin, WindowMode},
 };
 use bevy_rapier3d::{control::KinematicCharacterController, prelude::*};
 
@@ -15,6 +18,12 @@ const GROUND_TIMER: f32 = 0.5;
 const MOVEMENT_SPEED: f32 = 8.0;
 const JUMP_SPEED: f32 = 20.0;
 const GRAVITY: f32 = -9.81;
+
+struct OverlayColor;
+
+impl OverlayColor {
+    const GREEN: Color = Color::srgb(0.0, 1.0, 0.0);
+}
 
 fn main() {
     App::new()
@@ -25,15 +34,47 @@ fn main() {
         .init_resource::<MovementInput>()
         .init_resource::<LookInput>()
         .add_plugins((
-            DefaultPlugins,
+            DefaultPlugins.set(WindowPlugin {
+                primary_window: Some(Window {
+                    resizable: false,
+                    mode: WindowMode::BorderlessFullscreen(MonitorSelection::Primary),
+                    ..default()
+                }),
+                ..default()
+            }),
             RapierPhysicsPlugin::<NoUserData>::default(),
             //RapierDebugRenderPlugin::default(),
+            FpsOverlayPlugin {
+                config: FpsOverlayConfig {
+                    text_config: TextFont {
+                        font_size: 18.0,
+                        font: default(),
+                        font_smoothing: FontSmoothing::default(),
+                        ..default()
+                    },
+                    text_color: OverlayColor::GREEN,
+                    enabled: true,
+                    ..default()
+                },
+            },
         ))
-        .add_systems(Startup, (setup_player, setup_map))
+        .add_systems(Startup, (
+            setup_player, 
+            setup_map, 
+            hide_cursor
+        ))
         .add_systems(PreUpdate, handle_input.after(InputSystem))
         .add_systems(Update, player_look)
         .add_systems(FixedUpdate, player_movement)
         .run();
+}   
+
+fn hide_cursor(mut window: Single<&mut Window>) {
+    window.cursor_options.visible = false;
+    window.cursor_options.grab_mode = match window.cursor_options.grab_mode {
+        CursorGrabMode::None => CursorGrabMode::Locked,
+        CursorGrabMode::Locked | CursorGrabMode::Confined => CursorGrabMode::None,
+    };
 }
 
 pub fn setup_player(mut commands: Commands) {
