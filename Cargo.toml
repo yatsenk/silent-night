@@ -3,6 +3,6 @@ name = "bevy"
 version = "0.1.0"
 edition = "2024"
 
-[dependencies]
-bevy = "0.16"
+[dependencies]  
+bevy = { version = "0.16", features = ["bevy_dev_tools"]}
 bevy_rapier3d = "0.31"
