@@ -11,7 +11,7 @@ use bevy::{
 use bevy_rapier3d::{control::KinematicCharacterController, prelude::*};
 
 const MOUSE_SENSITIVITY: f32 = 0.3;
-const GROUND_TIMER: f32 = 0.5;
+const GROUND_TIMER: f32 = 0.5;  
 const MOVEMENT_SPEED: f32 = 8.0;
 const JUMP_SPEED: f32 = 20.0;
 const GRAVITY: f32 = -9.81;
@@ -65,12 +65,12 @@ pub fn setup_player(mut commands: Commands) {
             // FPS Camera
             b.spawn((
                 Camera3d::default(), 
-                Transform::from_xyz(0.0, 3.0, -0.1),
+                Transform::from_xyz(0.0, 7.0, -0.1),
                 DistanceFog {
                     color: Color::srgb(0.0, 0.0, 0.0),
                     falloff: FogFalloff::Linear {
-                        start: 30.0,
-                        end: 50.0,
+                        start: 70.0,
+                        end: 80.0,
                     },
                     ..default()
                 },
@@ -118,7 +118,7 @@ fn setup_map(
             Transform {
                 translation: Vec3::ZERO,
                 rotation: Quat::from_rotation_y(0f32.to_radians()),
-                scale: Vec3::splat(0.03),
+                scale: Vec3::splat(0.09),
             },
         ));
         /*
@@ -134,7 +134,6 @@ fn setup_map(
         ));
          */
     });
-
 
     // ground
     let image_sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
