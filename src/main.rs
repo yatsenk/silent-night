@@ -1,6 +1,7 @@
 use bevy::{
     dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin},
     text::FontSmoothing,
+    color::palettes::css::*,
     render::mesh::{VertexAttributeValues, PlaneMeshBuilder},
     image::{
         ImageLoaderSettings, 
@@ -107,14 +108,6 @@ pub fn setup_player(mut commands: Commands) {
             b.spawn((
                 Camera3d::default(), 
                 Transform::from_xyz(0.0, 7.0, -0.1),
-                DistanceFog {
-                    color: Color::srgb(0.0, 0.0, 0.0),
-                    falloff: FogFalloff::Linear {
-                        start: 70.0,
-                        end: 80.0,
-                    },
-                    ..default()
-                },
             ));
 
             b.spawn((
@@ -139,7 +132,7 @@ fn setup_map(
     commands.spawn((
         Mesh3d(meshes.add(Cuboid::new(2.0, 1.0, 1.0))),
         MeshMaterial3d(materials.add(StandardMaterial {
-            base_color: Srgba::hex("888888").unwrap().into(),
+            base_color: Srgba::hex("#000000").unwrap().into(),
             unlit: true,
             cull_mode: None,
             ..default()
@@ -175,6 +168,18 @@ fn setup_map(
         ));
          */
     });
+
+    // red point light
+    commands.spawn((
+        PointLight {
+            intensity: 100_000_000.0,
+            range: 35.0,
+            color: YELLOW.into(),
+            shadows_enabled: true,
+            ..default()
+        },
+        Transform::from_xyz(1.0, 30.0, 0.0),
+    ));
 
     // ground
     let image_sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
