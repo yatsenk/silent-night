@@ -149,7 +149,7 @@ fn setup_map(
 
     // light
     let scene_handle = asset_server.load(
-        GltfAssetLabel::Scene(0).from_asset("streetlights/scene.gltf")
+        GltfAssetLabel::Scene(0).from_asset("streetlight/scene.gltf")
     );
 
     commands.spawn(Transform::from_xyz(20.0, -1.0, 0.0))
@@ -185,7 +185,7 @@ fn setup_map(
     });
 
     let ground_texture: Handle<Image> = asset_server.load_with_settings(
-        "textures/ground/Albedo.png",
+        "ground/Albedo.png",
         
         move |settings: &mut ImageLoaderSettings| {
             settings.sampler = image_sampler.clone();
