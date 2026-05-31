@@ -1,15 +1,14 @@
+use std::f32::consts::PI;
+
 use bevy::{
-    dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin},
-    text::FontSmoothing,
-    render::mesh::{VertexAttributeValues, PlaneMeshBuilder},
-    image::{
-        ImageLoaderSettings, 
-        ImageSampler, 
-        ImageAddressMode, 
-        ImageSamplerDescriptor
-    }, 
-    input::{InputSystem, mouse::MouseMotion}, prelude::*,
-    window::{CursorGrabMode, WindowPlugin, WindowMode},
+    dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin}, 
+    image::{ImageAddressMode, ImageLoaderSettings, ImageSampler, ImageSamplerDescriptor}, 
+    input::{InputSystem, mouse::MouseMotion}, 
+    pbr::CascadeShadowConfigBuilder, 
+    render::mesh::{PlaneMeshBuilder, VertexAttributeValues}, 
+    text::FontSmoothing, 
+    window::{CursorGrabMode, WindowMode, WindowPlugin},
+    prelude::*, 
 };
 use bevy_rapier3d::{control::KinematicCharacterController, prelude::*};
 
@@ -137,6 +136,56 @@ fn setup_map(
             ..default()
         })),
         Transform::from_scale(Vec3::splat(1_000_000.0)),
+    ));
+
+    // moon
+    let image_sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
+        address_mode_u: ImageAddressMode::Repeat,
+        address_mode_v: ImageAddressMode::Repeat,
+        address_mode_w: ImageAddressMode::Repeat,
+        ..default()
+    });
+
+    let moon_texture: Handle<Image> = asset_server.load_with_settings(
+        "moon/textures/moon_01_diff_4k.png",
+        move |settings: &mut ImageLoaderSettings| {
+            settings.sampler = image_sampler.clone();
+        },
+    );
+    let _moon_displacement: Handle<Image> = asset_server.load("moon/textures/moon_01_disp_4k.png");
+    let moon_normal: Handle<Image> = asset_server.load("moon/textures/moon_01_nor_gl_4k.png");
+    let moon_roughness: Handle<Image> = asset_server.load("moon/textures/moon_01_rough_4k.png");
+
+    commands.spawn((
+        Mesh3d(meshes.add(Sphere::new(15.0))),
+        MeshMaterial3d(materials.add(StandardMaterial {
+            base_color_texture: Some(moon_texture.clone()),
+            normal_map_texture: Some(moon_normal.clone()),
+            metallic_roughness_texture: Some(moon_roughness.clone()),
+            unlit: true,
+            cull_mode: None,
+            ..default()
+        })),
+        Transform::from_xyz(30.0, 300.0, 30.0),
+    ));
+
+    commands.spawn((
+        DirectionalLight {
+            illuminance: light_consts::lux::FULL_MOON_NIGHT,
+            shadows_enabled: true,
+            ..default()
+        },
+        Transform {
+            translation: Vec3::new(30.0, 300.0, 30.0),
+            rotation: Quat::from_rotation_x(-PI / 4.),
+            ..default()
+        },
+        CascadeShadowConfigBuilder {
+            first_cascade_far_bound: 4.0,
+            maximum_distance: 10.0,
+            ..default()
+        }
+        .build(),
     ));
 
     // ground
