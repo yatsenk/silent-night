@@ -1,7 +1,6 @@
 use bevy::{
     dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin},
     text::FontSmoothing,
-    color::palettes::css::*,
     render::mesh::{VertexAttributeValues, PlaneMeshBuilder},
     image::{
         ImageLoaderSettings, 
@@ -138,47 +137,6 @@ fn setup_map(
             ..default()
         })),
         Transform::from_scale(Vec3::splat(1_000_000.0)),
-    ));
-
-    // light
-    let scene_handle = asset_server.load(
-        GltfAssetLabel::Scene(0).from_asset("streetlight/scene.gltf")
-    );
-
-    commands.spawn(Transform::from_xyz(20.0, -1.0, 0.0))
-    .with_children(|parent| {
-        parent.spawn((
-            SceneRoot(scene_handle.clone()),
-            Transform {
-                translation: Vec3::ZERO,
-                rotation: Quat::from_rotation_y(0f32.to_radians()),
-                scale: Vec3::splat(0.09),
-            },
-        ));
-        /*
-        parent.spawn((
-            SpotLight {
-                color: Color::srgb(240.0, 210.0, 2.0),
-                intensity: 500.0,
-                shadows_enabled: true,
-                range: 35.0, 
-                radius: 0.2,
-                ..default() 
-            },
-        ));
-         */
-    });
-
-    // red point light
-    commands.spawn((
-        PointLight {
-            intensity: 100_000_000.0,
-            range: 35.0,
-            color: YELLOW.into(),
-            shadows_enabled: true,
-            ..default()
-        },
-        Transform::from_xyz(1.0, 30.0, 0.0),
     ));
 
     // ground
