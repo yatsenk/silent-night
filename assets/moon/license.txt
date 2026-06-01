@@ -1,0 +1,11 @@
+Model Information:
+* title:	The Moon
+* source:	https://sketchfab.com/3d-models/the-moon-3335f1ff099a4f6d874824ebd0df85a6
+* author:	OverGeared (https://sketchfab.com/OverGeared)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "The Moon" (https://sketchfab.com/3d-models/the-moon-3335f1ff099a4f6d874824ebd0df85a6) by OverGeared (https://sketchfab.com/OverGeared) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
