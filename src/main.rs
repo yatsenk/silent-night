@@ -1,4 +1,5 @@
 use std::f32::consts::PI;
+use rand::RngExt;
 
 use bevy::{
     dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin}, image::{ImageAddressMode, ImageLoaderSettings, ImageSampler, ImageSamplerDescriptor}, input::{InputSystem, mouse::MouseMotion}, pbr::CascadeShadowConfigBuilder, prelude::*, render::mesh::{PlaneMeshBuilder, VertexAttributeValues}, text::FontSmoothing, window::{CursorGrabMode, WindowMode, WindowPlugin} 
@@ -169,7 +170,7 @@ fn setup_map(
     let mut z = -100.0;
     let mut x1 = -30.0;
     for _ in 0..10 {
-        commands.spawn(Transform::from_xyz(x1, 0.0, z))
+        commands.spawn(Transform::from_xyz(x1, rand::rng().random_range(-10.0..-5.0), z))
         .with_children(|parent| {
             parent.spawn((
                 SceneRoot(tree_handle.clone()),
@@ -180,14 +181,14 @@ fn setup_map(
                 },
             ));
         });
-        x1 += 20.0;
-        z += 30.0;
+        x1 += rand::rng().random_range(25.0..40.0);
+        z += rand::rng().random_range(30.0..45.0);
     }
 
     let mut z = -100.0;
     let mut x2 = -120.0;
     for _ in 0..10 {
-        commands.spawn(Transform::from_xyz(x2, 0.0, z))
+        commands.spawn(Transform::from_xyz(x2, rand::rng().random_range(-10.0..-5.0), z))
         .with_children(|parent| {
             parent.spawn((
                 SceneRoot(tree_handle.clone()),
@@ -198,8 +199,8 @@ fn setup_map(
                 },
             ));
         });
-        x2 += 20.0;
-        z += 30.0;
+        x2 += rand::rng().random_range(25.0..40.0);
+        z += rand::rng().random_range(30.0..45.0);
     }
 
     // ground
