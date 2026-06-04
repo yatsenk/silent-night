@@ -2,7 +2,11 @@ use std::f32::consts::PI;
 use rand::RngExt;
 
 use bevy::{
-    dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin}, image::{ImageAddressMode, ImageLoaderSettings, ImageSampler, ImageSamplerDescriptor}, input::{InputSystem, mouse::MouseMotion}, pbr::CascadeShadowConfigBuilder, prelude::*, render::mesh::{PlaneMeshBuilder, VertexAttributeValues}, text::FontSmoothing, window::{CursorGrabMode, WindowMode, WindowPlugin} 
+    dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin}, 
+    image::{ImageAddressMode, ImageLoaderSettings, ImageSampler, ImageSamplerDescriptor}, 
+    input::{InputSystem, mouse::MouseMotion}, pbr::{CascadeShadowConfigBuilder, VolumetricFog, FogVolume, VolumetricLight}, 
+    prelude::*, render::mesh::{PlaneMeshBuilder, VertexAttributeValues}, 
+    text::FontSmoothing, window::{CursorGrabMode, WindowMode, WindowPlugin} 
 };
 use bevy_rapier3d::{control::KinematicCharacterController, prelude::*};
 
@@ -11,6 +15,7 @@ const GROUND_TIMER: f32 = 0.5;
 const MOVEMENT_SPEED: f32 = 8.0;
 const JUMP_SPEED: f32 = 20.0;
 const GRAVITY: f32 = -9.81;
+const DIRECTIONAL_LIGHT_MOVEMENT_SPEED: f32 = 0.02;
 
 struct OverlayColor;
 
@@ -18,14 +23,43 @@ impl OverlayColor {
     const GREEN: Color = Color::srgb(0.0, 1.0, 0.0);
 }
 
+#[derive(Resource)]
+struct AppSettings {
+    volumetric_spotlight: bool,
+    volumetric_pointlight: bool,
+}
+
+impl Default for AppSettings {
+    fn default() -> Self {
+        Self {
+            volumetric_spotlight: true,
+            volumetric_pointlight: true,
+        }
+    }
+}
+
+#[derive(Component)]
+struct MoveBackAndForthHorizontally {
+    min_x: f32,
+    max_x: f32,
+    speed: f32,
+}
+
 fn main() {
     App::new()
+        .insert_resource(ClearColor(Color::Srgba(Srgba {
+            red: 0.02,
+            green: 0.02,
+            blue: 0.02,
+            alpha: 1.0,
+        })))
         .insert_resource(AmbientLight {
-            brightness: 200.0,
+            brightness: 20.0,
             ..default()
         })
         .init_resource::<MovementInput>()
         .init_resource::<LookInput>()
+        .init_resource::<AppSettings>()
         .add_plugins((
             DefaultPlugins.set(WindowPlugin {
                 primary_window: Some(Window {
@@ -57,7 +91,7 @@ fn main() {
             hide_cursor
         ))
         .add_systems(PreUpdate, handle_input.after(InputSystem))
-        .add_systems(Update, player_look)
+        .add_systems(Update, (player_look, move_directional_light, move_point_light, tweak_scene))
         .add_systems(FixedUpdate, player_movement)
         .run();
 }   
@@ -100,7 +134,11 @@ pub fn setup_player(mut commands: Commands) {
             b.spawn((
                 Camera3d::default(), 
                 Transform::from_xyz(0.0, 7.0, -0.1),
-            ));
+            ))
+            .insert(VolumetricFog {
+                ambient_intensity: 0.0,
+                ..default()
+            });
 
             b.spawn((
                 Transform::from_xyz(0.0, 0.2, -0.1),
@@ -114,12 +152,93 @@ pub fn setup_player(mut commands: Commands) {
         });
 }
 
+fn tweak_scene(
+    mut commands: Commands,
+    mut lights: Query<(Entity, &mut DirectionalLight), Changed<DirectionalLight>>,
+) {
+    for (light, mut directional_light) in lights.iter_mut() {
+        // Shadows are needed for volumetric lights to work.
+        directional_light.shadows_enabled = true;
+        commands.entity(light).insert(VolumetricLight);
+    }
+}
+
+fn move_directional_light(
+    input: Res<ButtonInput<KeyCode>>,
+    mut directional_lights: Query<&mut Transform, With<DirectionalLight>>,
+) {
+    let mut delta_theta = Vec2::ZERO;
+    if input.pressed(KeyCode::KeyW) || input.pressed(KeyCode::ArrowUp) {
+        delta_theta.y += DIRECTIONAL_LIGHT_MOVEMENT_SPEED;
+    }
+    if input.pressed(KeyCode::KeyS) || input.pressed(KeyCode::ArrowDown) {
+        delta_theta.y -= DIRECTIONAL_LIGHT_MOVEMENT_SPEED;
+    }
+    if input.pressed(KeyCode::KeyA) || input.pressed(KeyCode::ArrowLeft) {
+        delta_theta.x += DIRECTIONAL_LIGHT_MOVEMENT_SPEED;
+    }
+    if input.pressed(KeyCode::KeyD) || input.pressed(KeyCode::ArrowRight) {
+        delta_theta.x -= DIRECTIONAL_LIGHT_MOVEMENT_SPEED;
+    }
+
+    if delta_theta == Vec2::ZERO {
+        return;
+    }
+
+    let delta_quat = Quat::from_euler(EulerRot::XZY, delta_theta.y, 0.0, delta_theta.x);
+    for mut transform in directional_lights.iter_mut() {
+        transform.rotate(delta_quat);
+    }
+}
+
+// Toggle point light movement between left and right.
+fn move_point_light(
+    timer: Res<Time>,
+    mut objects: Query<(&mut Transform, &mut MoveBackAndForthHorizontally)>,
+) {
+    for (mut transform, mut move_data) in objects.iter_mut() {
+        let mut translation = transform.translation;
+        let mut need_toggle = false;
+        translation.x += move_data.speed * timer.delta_secs();
+        if translation.x > move_data.max_x {
+            translation.x = move_data.max_x;
+            need_toggle = true;
+        } else if translation.x < move_data.min_x {
+            translation.x = move_data.min_x;
+            need_toggle = true;
+        }
+        if need_toggle {
+            move_data.speed = -move_data.speed;
+        }
+        transform.translation = translation;
+    }
+}
+
 fn setup_map(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     asset_server: Res<AssetServer>,
 ) {
+    // fog
+    commands.spawn((
+        FogVolume::default(),
+        Transform::from_scale(Vec3::splat(35.0)),
+    ));
+
+    commands.spawn((
+        Transform::from_xyz(-1.8, 3.9, -2.7).looking_at(Vec3::ZERO, Vec3::Y),
+        SpotLight {
+            intensity: 50_000.0, // lumens
+            color: Color::WHITE,
+            shadows_enabled: true,
+            inner_angle: 0.76,
+            outer_angle: 0.94,
+            ..default()
+        },
+        VolumetricLight,
+    ));
+
     // sky
     commands.spawn((
         Mesh3d(meshes.add(Cuboid::new(2.0, 1.0, 1.0))),
