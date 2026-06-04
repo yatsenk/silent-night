@@ -20,7 +20,7 @@ impl OverlayColor {
 fn main() {
     App::new()
         .insert_resource(AmbientLight {
-            brightness: 30.0,
+            brightness: 200.0,
             ..default()
         })
         .init_resource::<MovementInput>()
@@ -162,6 +162,45 @@ fn setup_map(
             .build(),
         ));
     });
+
+    // forest
+    let tree_handle = asset_server.load(GltfAssetLabel::Scene(0).from_asset("pine_tree/scene.gltf"));
+
+    let mut z = -100.0;
+    let mut x1 = -30.0;
+    for _ in 0..10 {
+        commands.spawn(Transform::from_xyz(x1, 0.0, z))
+        .with_children(|parent| {
+            parent.spawn((
+                SceneRoot(tree_handle.clone()),
+                Transform {
+                    translation: Vec3::ZERO,
+                    rotation: Quat::from_rotation_y(0f32.to_radians()),
+                    scale: Vec3::splat(0.1),
+                },
+            ));
+        });
+        x1 += 20.0;
+        z += 30.0;
+    }
+
+    let mut z = -100.0;
+    let mut x2 = -120.0;
+    for _ in 0..10 {
+        commands.spawn(Transform::from_xyz(x2, 0.0, z))
+        .with_children(|parent| {
+            parent.spawn((
+                SceneRoot(tree_handle.clone()),
+                Transform {
+                    translation: Vec3::ZERO,
+                    rotation: Quat::from_rotation_y(0f32.to_radians()),
+                    scale: Vec3::splat(0.1),
+                },
+            ));
+        });
+        x2 += 20.0;
+        z += 30.0;
+    }
 
     // ground
     let image_sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
