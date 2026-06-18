@@ -17,3 +17,4 @@ To run this game, you need to have the [Rust](https://www.rust-lang.org/tools/in
 
    ```bash
    cargo run
+   ```
