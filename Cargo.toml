@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]  
+argh = "0.1.19"
 bevy = { version = "0.16", features = ["bevy_dev_tools"]}
 bevy_rapier3d = "0.31"
 rand = { version = "0.10.1", features = ["thread_rng"] }
