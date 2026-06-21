@@ -5,8 +5,8 @@ use bevy_rapier3d::{control::KinematicCharacterController, prelude::*};
 
 const MOUSE_SENSITIVITY: f32 = 0.3;
 const GROUND_TIMER: f32 = 0.5;  
-const MOVEMENT_SPEED: f32 = 8.0;
-const JUMP_SPEED: f32 = 20.0;
+const MOVEMENT_SPEED: f32 = 10.0;
+const JUMP_SPEED: f32 = 30.0;
 const GRAVITY: f32 = -9.81;
 
 pub struct PlayerPlugin;
@@ -19,9 +19,7 @@ impl Plugin for PlayerPlugin {
             .add_systems(Startup, setup_player)
             .add_systems(PreUpdate, handle_input.after(InputSystem))
             .add_systems(Update, player_look)
-            .add_systems(FixedUpdate, player_movement)
-            ;
-            
+            .add_systems(FixedUpdate, player_movement);
     }
 }
 
@@ -55,7 +53,7 @@ pub fn setup_player(mut commands: Commands) {
                 DistanceFog {
                     color: Color::srgb(0.25, 0.25, 0.25),
                     falloff: FogFalloff::Exponential {
-                        density: 0.03,
+                        density: 0.02,
                     },
                     ..default()
                 },
