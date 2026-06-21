@@ -1,16 +1,32 @@
 use std::f32::consts::PI;
 use rand::RngExt;
+use argh::FromArgs;
 
 use bevy::prelude::*;
 use bevy::pbr::CascadeShadowConfigBuilder;
 use bevy::image::{ImageAddressMode, ImageLoaderSettings, ImageSampler, ImageSamplerDescriptor};
+use bevy::render::view::{VisibilityRange, NoCpuCulling};
 use bevy::render::mesh::{PlaneMeshBuilder, VertexAttributeValues};
 use bevy_rapier3d::prelude::*;
+
+static NORMAL_VISIBILITY_RANGE: VisibilityRange = VisibilityRange {
+    start_margin: 0.0..0.0,
+    end_margin: 3.0..4.0,
+    use_aabb: false,
+};
+
+static INVISIBLE_VISIBILITY_RANGE: VisibilityRange = VisibilityRange {
+    start_margin: 4.0..5.0,
+    end_margin: 8.0..9.0,
+    use_aabb: false,
+};
 
 pub struct EnviromentPlugin;
 
 impl Plugin for EnviromentPlugin {
     fn build(&self, app: &mut App) {
+        let args: Args = argh::from_env();
+
         app
             .insert_resource(ClearColor(Color::Srgba(Srgba {
                 red: 0.02,
@@ -22,10 +38,23 @@ impl Plugin for EnviromentPlugin {
                 brightness: 100.0,
                 ..default()
             })
-            .add_systems(Startup, ( 
-            setup_map, 
-        ));
+            .insert_resource(args)
+            .add_systems(Startup, setup_map)
+            .add_systems(Update, set_visibility_ranges);
     }
+}
+
+#[derive(Component, Debug, Clone, Copy, PartialEq)]
+enum MainModel {
+    Showed
+}
+
+#[derive(FromArgs, Resource)]
+#[argh(description = "GIT_HASH")]
+struct Args {
+    /// whether to use GPU culling only
+    #[argh(switch)]
+    no_cpu_culling: bool,
 }
 
 fn setup_map(
@@ -34,8 +63,6 @@ fn setup_map(
     mut materials: ResMut<Assets<StandardMaterial>>,
     asset_server: Res<AssetServer>,
 ) {
-    // fog
-
     // sky
     commands.spawn((
         Mesh3d(meshes.add(Cuboid::new(2.0, 1.0, 1.0))),
@@ -166,3 +193,38 @@ fn setup_map(
         Collider::cuboid(ground_size, ground_height, ground_size),
     ));
 }
+
+fn set_visibility_ranges(
+    mut commands: Commands,
+    mut new_meshes: Query<Entity, Added<Mesh3d>>,
+    children: Query<(Option<&ChildOf>, Option<&MainModel>)>,
+    args: Res<Args>,
+) {
+    for new_mesh in new_meshes.iter_mut() {
+        let (mut current, mut main_model) = (new_mesh, None);
+        while let Ok((child_of, maybe_main_model)) = children.get(current) {
+            if let Some(model) = maybe_main_model {
+                main_model = Some(model);
+                break;
+            }
+            match child_of {
+                Some(child_of) => current = child_of.parent(),
+                None => break,
+            }
+        }
+
+        match main_model {
+            Some(MainModel::Showed) => {
+                let mut entity_commands = commands.entity(new_mesh);
+                entity_commands
+                    .insert(NORMAL_VISIBILITY_RANGE.clone())
+                    .insert(MainModel::Showed);
+                if args.no_cpu_culling {
+                    entity_commands.insert(NoCpuCulling);
+                }
+            }
+            None => {}
+        }
+    }
+}
+
